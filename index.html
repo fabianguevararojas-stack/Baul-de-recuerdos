@@ -9,37 +9,102 @@
       margin: 0;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
       background: #f8e1e7;
       font-family: Georgia, serif;
     }
+    .sobre {
+      position: relative;
+      width: 280px;
+      height: 190px;
+      background: #e8c9a0;
+      border-radius: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+    .tapa {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-left: 140px solid transparent;
+      border-right: 140px solid transparent;
+      border-top: 110px solid #d9b283;
+      transform-origin: top;
+      transition: transform 0.6s;
+    }
+    .sobre.abierto .tapa { transform: rotateX(180deg); }
+    .corazon {
+      position: absolute;
+      top: 75px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 36px;
+    }
+    #pista { color: #b03a5b; margin-top: 18px; }
     .carta {
       background: #fffaf0;
       max-width: 340px;
-      margin: 20px;
+      max-height: 85vh;
+      overflow-y: auto;
       padding: 28px 24px;
       border-radius: 12px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.15);
       text-align: center;
+      animation: aparecer 1s;
     }
-    h1 { color: #b03a5b; margin-top: 0; }
-    p { color: #444; line-height: 1.6; }
-    button {
+    .carta h1 { color: #b03a5b; margin-top: 0; }
+    .carta p { color: #444; line-height: 1.6; text-align: left; }
+    .carta button {
       background: #b03a5b;
       color: white;
       border: none;
       padding: 12px 22px;
       border-radius: 25px;
       font-size: 16px;
+      margin-top: 10px;
+    }
+    .oculto { display: none; }
+    @keyframes aparecer {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="carta">
+
+  <div id="sobre" class="sobre">
+    <div class="tapa"></div>
+    <div class="corazon">❤️</div>
+  </div>
+  <p id="pista">Toca el sobre</p>
+
+  <div id="carta" class="carta oculto">
     <h1>Para ti</h1>
-    <p>Aquí irá mi carta...</p>
+    <p>Sé que los tiempos que hemos vivido últimamente no son como algún día los soñamos, ni usted ni yo imaginábamos que las cosas llegarían a ser así. Quizás la vida nos ha puesto en momentos difíciles y hoy las cosas no son como quisiéramos, pero eso no significa que debamos borrar de nuestro corazón todo lo hermoso que un día vivimos.</p>
+    <p>No está mal detenernos un instante y recordar aquellos momentos en los que éramos felices, nuestras sonrisas, nuestras miradas, los abrazos, las palabras bonitas y tantos pequeños detalles que hicieron especial nuestra historia. Yo creo que hay recuerdos que, por más que pase el tiempo o cambien las circunstancias, siempre tendrán un lugar muy especial en el corazón.</p>
+    <p>Y aunque hoy las cosas sean diferentes, no quiero que olvidemos que alguna vez fuimos felices, que compartimos sueños, ilusiones y momentos que nadie podrá borrar. Porque cuando alguien ha significado tanto en nuestra vida, no se deja de valorar lo vivido simplemente porque las cosas ya no sean iguales.</p>
+    <p>Yo prefiero recordar lo bonito con amor y gratitud, porque si algo me queda claro es que, a pesar de todo, usted siempre tendrá un rinconcito especial en mi corazón. ❤️</p>
     <button>Abrir el baúl</button>
   </div>
+
+  <script>
+    const sobre = document.getElementById('sobre');
+    const pista = document.getElementById('pista');
+    const carta = document.getElementById('carta');
+
+    sobre.addEventListener('click', function () {
+      sobre.classList.add('abierto');
+      pista.style.display = 'none';
+      setTimeout(function () {
+        sobre.style.display = 'none';
+        carta.classList.remove('oculto');
+      }, 900);
+    });
+  </script>
 </body>
 </html>
