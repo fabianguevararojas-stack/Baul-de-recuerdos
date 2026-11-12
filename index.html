@@ -177,8 +177,8 @@
     const visor = document.getElementById('visor');
     const fotoGrande = document.getElementById('fotoGrande');
 
-    const API = 'https://api.github.com/repos/fabianguevararojas-stack/Baul-de-recuerdos/contents/';
-    const NO_SON_FOTOS = ['index.html', 'README.md', '.gitattributes'];
+    const API = 'https://api.github.com/repos/fabianguevararojas-stack/Baul-de-recuerdos/contents/fotos';
+    const ES_FOTO = /\.(jpe?g|png|gif|webp|heic)$/i;
     let cargado = false;
 
     // 1. Abrir el sobre
@@ -200,19 +200,19 @@
       baul.classList.add('oculto');
     });
 
-    // 3. Buscar las fotos del repositorio y mostrarlas
+    // 3. Buscar las fotos de la carpeta y mostrarlas
     async function cargarFotos() {
       galeria.textContent = 'Cargando recuerdos...';
       try {
         const respuesta = await fetch(API);
         const archivos = await respuesta.json();
         const fotos = archivos.filter(function (a) {
-          return a.type === 'file' && !NO_SON_FOTOS.includes(a.name);
+          return a.type === 'file' && ES_FOTO.test(a.name);
         });
         galeria.textContent = '';
         fotos.forEach(function (f, i) {
           const img = document.createElement('img');
-          img.src = encodeURIComponent(f.name);
+          img.src = 'fotos/' + encodeURIComponent(f.name);
           img.className = 'foto';
           img.loading = 'lazy';
           img.alt = 'Recuerdo';
