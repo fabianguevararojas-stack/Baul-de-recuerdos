@@ -103,42 +103,86 @@
       height: 38px;
       border-radius: 50%;
       font-size: 18px;
-      z-index: 11;
+      z-index: 1100;
     }
     .libro {
       position: relative;
       width: 100%;
-      max-width: 360px;
-      height: min(68vh, 560px);
-      background: #fffaf0;
-      border-left: 12px solid #8f2d47;
-      border-radius: 6px 14px 14px 6px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 10px 0 14px -8px rgba(0,0,0,0.25);
-      overflow: hidden;
-      perspective: 800px;
+      max-width: 340px;
+      height: min(66vh, 540px);
+      perspective: 1600px;
+      -webkit-perspective: 1600px;
+      border-radius: 4px 12px 12px 4px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      touch-action: pan-y;
     }
-    .pagina {
+    /* El lomo del libro */
+    .libro::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      background: linear-gradient(90deg, #6d1f35, #8f2d47);
+      border-radius: 4px 0 0 4px;
+      z-index: 999;
+    }
+    .msg { padding: 30px; text-align: center; color: #b03a5b; }
+
+    /* Cada hoja gira desde el lomo */
+    .hoja {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      padding: 20px 16px 12px;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.45, 0.05, 0.25, 1), visibility 0s;
+      visibility: visible;
+    }
+    .hoja.volteada {
+      transform: rotateY(-180deg);
+      visibility: hidden;
+      transition: transform 0.8s cubic-bezier(0.45, 0.05, 0.25, 1), visibility 0s linear 0.8s;
+    }
+    .cara, .dorso {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       box-sizing: border-box;
+      border-radius: 4px 12px 12px 4px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .cara {
+      background: #fffaf0;
+      padding: 22px 16px 12px 26px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      animation: entrar 0.45s;
     }
-    .portada {
+    .dorso {
+      background: repeating-linear-gradient(#fffaf0, #fffaf0 27px, #f3e8d6 28px);
+      transform: rotateY(180deg);
+      box-shadow: inset -10px 0 14px -8px rgba(0,0,0,0.2);
+    }
+    .cara.portada {
+      background: linear-gradient(135deg, #a8344f, #7a2339);
+      color: #f3d9a4;
       justify-content: center;
       text-align: center;
-      color: #b03a5b;
+      border: 2px solid #d9b46a;
     }
-    .portada h3 { font-size: 30px; margin: 10px 0; }
     .portada .cora { font-size: 54px; }
-    .portada small { color: #999; margin-top: 24px; }
+    .portada h3 { font-size: 28px; margin: 12px 0; }
+    .portada small { margin-top: 26px; opacity: 0.8; }
+
     .fotos {
       flex: 1;
       width: 100%;
@@ -148,7 +192,7 @@
     }
     .polaroid {
       position: relative;
-      width: 58%;
+      width: 60%;
       background: white;
       padding: 6px 6px 20px;
       box-sizing: border-box;
@@ -171,8 +215,8 @@
       aspect-ratio: 1 / 1;
       object-fit: cover;
     }
-    .p1 { align-self: flex-start; transform: rotate(-5deg); margin-left: 4px; }
-    .p2 { align-self: flex-end; transform: rotate(4deg); margin-top: -6px; margin-right: 4px; }
+    .p1 { align-self: flex-start; transform: rotate(-5deg); }
+    .p2 { align-self: flex-end; transform: rotate(4deg); margin-top: -6px; }
     .p-sola { align-self: center; width: 70%; transform: rotate(-3deg); }
     .frase {
       font-style: italic;
@@ -188,8 +232,8 @@
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      max-width: 360px;
-      margin-top: 14px;
+      max-width: 340px;
+      margin-top: 16px;
     }
     .nav button {
       background: #b03a5b;
@@ -213,7 +257,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 20;
+      z-index: 2000;
     }
     .visor img { max-width: 94%; max-height: 90%; border-radius: 6px; }
 
@@ -221,10 +265,6 @@
     @keyframes aparecer {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes entrar {
-      from { opacity: 0; transform: translateX(var(--dx, 30px)) rotateY(var(--giro, 8deg)); }
-      to { opacity: 1; transform: translateX(0) rotateY(0); }
     }
   </style>
 </head>
@@ -249,9 +289,7 @@
 
   <div id="baul" class="baul oculto">
     <button id="btnCerrar" class="cerrar">✕</button>
-    <div id="libro" class="libro">
-      <div id="pagina" class="pagina"></div>
-    </div>
+    <div id="libro" class="libro"></div>
     <div class="nav">
       <button id="btnAnterior">‹</button>
       <span id="contador"></span>
@@ -269,7 +307,6 @@
     const carta = document.getElementById('carta');
     const baul = document.getElementById('baul');
     const libro = document.getElementById('libro');
-    const pagina = document.getElementById('pagina');
     const contador = document.getElementById('contador');
     const btnAnterior = document.getElementById('btnAnterior');
     const btnSiguiente = document.getElementById('btnSiguiente');
@@ -293,7 +330,7 @@
       'Lo bonito se queda para siempre.'
     ];
 
-    let paginas = [];
+    let hojas = [];
     let actual = 0;
     let cargado = false;
 
@@ -316,51 +353,58 @@
       baul.classList.add('oculto');
     });
 
-    // 3. Buscar las fotos y armar las páginas (2 fotos por página)
+    // 3. Buscar las fotos de la carpeta
     async function cargarFotos() {
-      pagina.textContent = 'Cargando recuerdos...';
+      libro.innerHTML = '<p class="msg">Cargando recuerdos...</p>';
       try {
         const respuesta = await fetch(API);
         const archivos = await respuesta.json();
         const fotos = archivos
           .filter(function (a) { return a.type === 'file' && ES_FOTO.test(a.name); })
-          .sort(function (a, b) { return a.name.localeCompare(b.name); })
           .map(function (a) { return 'fotos/' + encodeURIComponent(a.name); });
-
-        paginas = [{ tipo: 'portada' }];
-        for (let i = 0; i < fotos.length; i += 2) {
-          paginas.push({ tipo: 'fotos', fotos: fotos.slice(i, i + 2) });
+        if (fotos.length === 0) {
+          libro.innerHTML = '<p class="msg">Aún no hay fotos en el baúl.</p>';
+          return;
         }
+        construirLibro(fotos);
         cargado = true;
-        actual = 0;
-        mostrarPagina(0);
       } catch (error) {
-        pagina.textContent = 'No se pudieron cargar las fotos. Intenta de nuevo.';
+        libro.innerHTML = '<p class="msg">No se pudieron cargar las fotos. Intenta de nuevo.</p>';
       }
     }
 
-    // 4. Dibujar una página del libro
-    function mostrarPagina(direccion) {
-      const datos = paginas[actual];
-      pagina.style.setProperty('--dx', (direccion >= 0 ? 30 : -30) + 'px');
-      pagina.style.setProperty('--giro', (direccion >= 0 ? 8 : -8) + 'deg');
-      pagina.style.animation = 'none';
-      pagina.offsetHeight;
-      pagina.style.animation = '';
-      pagina.textContent = '';
-      pagina.classList.toggle('portada', datos.tipo === 'portada');
+    // 4. Armar el libro: una hoja por cada 2 fotos, más la portada
+    function construirLibro(fotos) {
+      libro.textContent = '';
+      hojas = [];
+      actual = 0;
 
-      if (datos.tipo === 'portada') {
-        pagina.innerHTML =
-          '<div class="cora">❤️</div>' +
-          '<h3>Nuestros recuerdos</h3>' +
-          '<small>Desliza o toca ›</small>';
-      } else {
+      const grupos = [];
+      for (let i = 0; i < fotos.length; i += 2) {
+        grupos.push(fotos.slice(i, i + 2));
+      }
+      const total = grupos.length + 1;
+
+      // Portada
+      const portada = crearHoja(0, total);
+      portada.querySelector('.cara').classList.add('portada');
+      portada.querySelector('.cara').innerHTML =
+        '<div class="cora">❤️</div>' +
+        '<h3>Nuestros recuerdos</h3>' +
+        '<small>Desliza o toca ›</small>';
+      libro.appendChild(portada);
+      hojas.push(portada);
+
+      // Páginas con fotos
+      grupos.forEach(function (grupo, i) {
+        const hoja = crearHoja(i + 1, total);
+        const cara = hoja.querySelector('.cara');
+
         const cont = document.createElement('div');
         cont.className = 'fotos';
-        datos.fotos.forEach(function (src, i) {
+        grupo.forEach(function (src, n) {
           const marco = document.createElement('div');
-          marco.className = 'polaroid ' + (datos.fotos.length === 1 ? 'p-sola' : (i === 0 ? 'p1' : 'p2'));
+          marco.className = 'polaroid ' + (grupo.length === 1 ? 'p-sola' : (n === 0 ? 'p1' : 'p2'));
           const img = document.createElement('img');
           img.src = src;
           img.alt = 'Recuerdo';
@@ -371,29 +415,56 @@
           marco.appendChild(img);
           cont.appendChild(marco);
         });
+
         const frase = document.createElement('div');
         frase.className = 'frase';
-        frase.textContent = FRASES[(actual - 1) % FRASES.length];
-        pagina.appendChild(cont);
-        pagina.appendChild(frase);
-      }
+        frase.textContent = FRASES[i % FRASES.length];
 
-      contador.textContent = actual === 0 ? '' : 'Página ' + actual + ' de ' + (paginas.length - 1);
-      btnAnterior.disabled = actual === 0;
-      btnSiguiente.disabled = actual === paginas.length - 1;
+        cara.appendChild(cont);
+        cara.appendChild(frase);
+        libro.appendChild(hoja);
+        hojas.push(hoja);
+      });
+
+      actualizarControles();
     }
 
+    // Una hoja tiene cara (frente) y dorso (atrás)
+    function crearHoja(indice, total) {
+      const hoja = document.createElement('div');
+      hoja.className = 'hoja';
+      hoja.style.zIndex = String(total - indice);
+      const cara = document.createElement('div');
+      cara.className = 'cara';
+      const dorso = document.createElement('div');
+      dorso.className = 'dorso';
+      hoja.appendChild(cara);
+      hoja.appendChild(dorso);
+      return hoja;
+    }
+
+    // 5. Pasar página
     function pasar(cambio) {
-      const nueva = actual + cambio;
-      if (nueva < 0 || nueva >= paginas.length) { return; }
-      actual = nueva;
-      mostrarPagina(cambio);
+      if (cambio > 0 && actual < hojas.length - 1) {
+        hojas[actual].classList.add('volteada');
+        actual++;
+      } else if (cambio < 0 && actual > 0) {
+        actual--;
+        hojas[actual].classList.remove('volteada');
+      }
+      actualizarControles();
+    }
+
+    function actualizarControles() {
+      contador.textContent = actual === 0 ? '' : 'Página ' + actual + ' de ' + (hojas.length - 1);
+      btnAnterior.disabled = actual === 0;
+      btnSiguiente.disabled = actual >= hojas.length - 1;
     }
 
     btnAnterior.addEventListener('click', function () { pasar(-1); });
     btnSiguiente.addEventListener('click', function () { pasar(1); });
 
-    // 5. Deslizar con el dedo
+    // 6. Deslizar con el dedo
     let inicioX = 0;
     libro.addEventListener('touchstart', function (e) {
       inicioX = e.changedTouches[0].clientX;
@@ -404,7 +475,7 @@
       if (diferencia > 50) { pasar(-1); }
     });
 
-    // 6. Cerrar la foto grande al tocarla
+    // 7. Cerrar la foto grande al tocarla
     visor.addEventListener('click', function () {
       visor.classList.add('oculto');
     });
