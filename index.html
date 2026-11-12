@@ -75,7 +75,7 @@
       margin-top: 10px;
     }
 
-    /* Baúl de recuerdos */
+    /* ===== Libro de recuerdos ===== */
     .baul {
       position: fixed;
       top: 0;
@@ -83,13 +83,15 @@
       right: 0;
       bottom: 0;
       background: #f8e1e7;
-      overflow-y: auto;
-      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
       box-sizing: border-box;
       z-index: 10;
       animation: aparecer 0.6s;
     }
-    .baul h2 { color: #b03a5b; text-align: center; margin: 10px 0 20px; }
     .cerrar {
       position: absolute;
       top: 14px;
@@ -101,23 +103,106 @@
       height: 38px;
       border-radius: 50%;
       font-size: 18px;
+      z-index: 11;
     }
-    .galeria {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      padding-bottom: 30px;
+    .libro {
+      position: relative;
+      width: 100%;
+      max-width: 360px;
+      height: min(68vh, 560px);
+      background: #fffaf0;
+      border-left: 12px solid #8f2d47;
+      border-radius: 6px 14px 14px 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 10px 0 14px -8px rgba(0,0,0,0.25);
+      overflow: hidden;
+      perspective: 800px;
     }
-    .foto {
+    .pagina {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 20px 16px 12px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      animation: entrar 0.45s;
+    }
+    .portada {
+      justify-content: center;
+      text-align: center;
+      color: #b03a5b;
+    }
+    .portada h3 { font-size: 30px; margin: 10px 0; }
+    .portada .cora { font-size: 54px; }
+    .portada small { color: #999; margin-top: 24px; }
+    .fotos {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .polaroid {
+      position: relative;
+      width: 58%;
+      background: white;
+      padding: 6px 6px 20px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .polaroid::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      width: 56px;
+      height: 18px;
+      margin-left: -28px;
+      background: rgba(240, 190, 120, 0.7);
+      transform: rotate(-4deg);
+    }
+    .polaroid img {
+      display: block;
       width: 100%;
       aspect-ratio: 1 / 1;
       object-fit: cover;
-      background: white;
-      padding: 6px;
-      box-sizing: border-box;
-      border-radius: 4px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
+    .p1 { align-self: flex-start; transform: rotate(-5deg); margin-left: 4px; }
+    .p2 { align-self: flex-end; transform: rotate(4deg); margin-top: -6px; margin-right: 4px; }
+    .p-sola { align-self: center; width: 70%; transform: rotate(-3deg); }
+    .frase {
+      font-style: italic;
+      color: #b03a5b;
+      text-align: center;
+      font-size: 17px;
+      line-height: 1.4;
+      margin: 8px 6px 2px;
+      min-height: 48px;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 360px;
+      margin-top: 14px;
+    }
+    .nav button {
+      background: #b03a5b;
+      color: white;
+      border: none;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      font-size: 22px;
+    }
+    .nav button:disabled { opacity: 0.3; }
+    #contador { color: #b03a5b; font-size: 14px; }
+
     .visor {
       position: fixed;
       top: 0;
@@ -136,6 +221,10 @@
     @keyframes aparecer {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes entrar {
+      from { opacity: 0; transform: translateX(var(--dx, 30px)) rotateY(var(--giro, 8deg)); }
+      to { opacity: 1; transform: translateX(0) rotateY(0); }
     }
   </style>
 </head>
@@ -160,8 +249,14 @@
 
   <div id="baul" class="baul oculto">
     <button id="btnCerrar" class="cerrar">✕</button>
-    <h2>🗝️ Baúl de recuerdos</h2>
-    <div id="galeria" class="galeria"></div>
+    <div id="libro" class="libro">
+      <div id="pagina" class="pagina"></div>
+    </div>
+    <div class="nav">
+      <button id="btnAnterior">‹</button>
+      <span id="contador"></span>
+      <button id="btnSiguiente">›</button>
+    </div>
   </div>
 
   <div id="visor" class="visor oculto">
@@ -173,12 +268,33 @@
     const pista = document.getElementById('pista');
     const carta = document.getElementById('carta');
     const baul = document.getElementById('baul');
-    const galeria = document.getElementById('galeria');
+    const libro = document.getElementById('libro');
+    const pagina = document.getElementById('pagina');
+    const contador = document.getElementById('contador');
+    const btnAnterior = document.getElementById('btnAnterior');
+    const btnSiguiente = document.getElementById('btnSiguiente');
     const visor = document.getElementById('visor');
     const fotoGrande = document.getElementById('fotoGrande');
 
     const API = 'https://api.github.com/repos/fabianguevararojas-stack/Baul-de-recuerdos/contents/fotos';
     const ES_FOTO = /\.(jpe?g|png|gif|webp|heic)$/i;
+
+    // Frases: una por página. Puedes cambiarlas por las tuyas.
+    const FRASES = [
+      'Hay momentos que el tiempo no logra borrar.',
+      'Una sonrisa tuya bastaba para iluminar el día.',
+      'No eran grandes cosas, eran días que hoy valen mucho.',
+      'Lo vivido siempre tendrá su lugar en mi corazón.',
+      'Gracias por cada instante que compartimos.',
+      'Algunas miradas dicen más que mil palabras.',
+      'Fuimos felices, y eso nadie lo puede cambiar.',
+      'Cada recuerdo guarda un pedacito de nosotros.',
+      'Los mejores recuerdos son los más sencillos.',
+      'Lo bonito se queda para siempre.'
+    ];
+
+    let paginas = [];
+    let actual = 0;
     let cargado = false;
 
     // 1. Abrir el sobre
@@ -191,7 +307,7 @@
       }, 900);
     });
 
-    // 2. Abrir y cerrar el baúl
+    // 2. Abrir y cerrar el libro
     document.getElementById('btnBaul').addEventListener('click', function () {
       baul.classList.remove('oculto');
       if (!cargado) { cargarFotos(); }
@@ -200,36 +316,95 @@
       baul.classList.add('oculto');
     });
 
-    // 3. Buscar las fotos de la carpeta y mostrarlas
+    // 3. Buscar las fotos y armar las páginas (2 fotos por página)
     async function cargarFotos() {
-      galeria.textContent = 'Cargando recuerdos...';
+      pagina.textContent = 'Cargando recuerdos...';
       try {
         const respuesta = await fetch(API);
         const archivos = await respuesta.json();
-        const fotos = archivos.filter(function (a) {
-          return a.type === 'file' && ES_FOTO.test(a.name);
-        });
-        galeria.textContent = '';
-        fotos.forEach(function (f, i) {
-          const img = document.createElement('img');
-          img.src = 'fotos/' + encodeURIComponent(f.name);
-          img.className = 'foto';
-          img.loading = 'lazy';
-          img.alt = 'Recuerdo';
-          img.style.transform = 'rotate(' + (i % 2 === 0 ? -2 : 2) + 'deg)';
-          img.addEventListener('click', function () {
-            fotoGrande.src = img.src;
-            visor.classList.remove('oculto');
-          });
-          galeria.appendChild(img);
-        });
+        const fotos = archivos
+          .filter(function (a) { return a.type === 'file' && ES_FOTO.test(a.name); })
+          .sort(function (a, b) { return a.name.localeCompare(b.name); })
+          .map(function (a) { return 'fotos/' + encodeURIComponent(a.name); });
+
+        paginas = [{ tipo: 'portada' }];
+        for (let i = 0; i < fotos.length; i += 2) {
+          paginas.push({ tipo: 'fotos', fotos: fotos.slice(i, i + 2) });
+        }
         cargado = true;
+        actual = 0;
+        mostrarPagina(0);
       } catch (error) {
-        galeria.textContent = 'No se pudieron cargar las fotos. Intenta de nuevo.';
+        pagina.textContent = 'No se pudieron cargar las fotos. Intenta de nuevo.';
       }
     }
 
-    // 4. Cerrar la foto grande al tocarla
+    // 4. Dibujar una página del libro
+    function mostrarPagina(direccion) {
+      const datos = paginas[actual];
+      pagina.style.setProperty('--dx', (direccion >= 0 ? 30 : -30) + 'px');
+      pagina.style.setProperty('--giro', (direccion >= 0 ? 8 : -8) + 'deg');
+      pagina.style.animation = 'none';
+      pagina.offsetHeight;
+      pagina.style.animation = '';
+      pagina.textContent = '';
+      pagina.classList.toggle('portada', datos.tipo === 'portada');
+
+      if (datos.tipo === 'portada') {
+        pagina.innerHTML =
+          '<div class="cora">❤️</div>' +
+          '<h3>Nuestros recuerdos</h3>' +
+          '<small>Desliza o toca ›</small>';
+      } else {
+        const cont = document.createElement('div');
+        cont.className = 'fotos';
+        datos.fotos.forEach(function (src, i) {
+          const marco = document.createElement('div');
+          marco.className = 'polaroid ' + (datos.fotos.length === 1 ? 'p-sola' : (i === 0 ? 'p1' : 'p2'));
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = 'Recuerdo';
+          img.addEventListener('click', function () {
+            fotoGrande.src = src;
+            visor.classList.remove('oculto');
+          });
+          marco.appendChild(img);
+          cont.appendChild(marco);
+        });
+        const frase = document.createElement('div');
+        frase.className = 'frase';
+        frase.textContent = FRASES[(actual - 1) % FRASES.length];
+        pagina.appendChild(cont);
+        pagina.appendChild(frase);
+      }
+
+      contador.textContent = actual === 0 ? '' : 'Página ' + actual + ' de ' + (paginas.length - 1);
+      btnAnterior.disabled = actual === 0;
+      btnSiguiente.disabled = actual === paginas.length - 1;
+    }
+
+    function pasar(cambio) {
+      const nueva = actual + cambio;
+      if (nueva < 0 || nueva >= paginas.length) { return; }
+      actual = nueva;
+      mostrarPagina(cambio);
+    }
+
+    btnAnterior.addEventListener('click', function () { pasar(-1); });
+    btnSiguiente.addEventListener('click', function () { pasar(1); });
+
+    // 5. Deslizar con el dedo
+    let inicioX = 0;
+    libro.addEventListener('touchstart', function (e) {
+      inicioX = e.changedTouches[0].clientX;
+    });
+    libro.addEventListener('touchend', function (e) {
+      const diferencia = e.changedTouches[0].clientX - inicioX;
+      if (diferencia < -50) { pasar(1); }
+      if (diferencia > 50) { pasar(-1); }
+    });
+
+    // 6. Cerrar la foto grande al tocarla
     visor.addEventListener('click', function () {
       visor.classList.add('oculto');
     });
